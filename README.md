@@ -64,7 +64,7 @@ Qdrant 初版无需 Docker 或独立数据库进程，数据直接写入 `.data/
 
 初版使用 Qdrant 做 dense vector retrieval，再对候选结果执行一个轻量关键词匹配并按 `0.6 vector + 0.4 keyword` 融合排序。这样暂时不需要再引入 Elasticsearch/OpenSearch。
 
-> 注意：Dify YAML 只包含知识库 ID 和检索参数，不包含原知识库中的文档/chunk。因此仓库目前无法 1:1 带出原 Dify 知识库。`scripts/index_knowledge.py` 默认会把 42 条景点解说词加入 Qdrant，同时读取 `data/knowledge.json`。后续拿到原知识库数据后，直接填入该 JSON 或编写导入器即可。
+Dify 原知识库可以通过 `scripts/import_dify.py` 直接读取已有 document/chunk，生成 `data/knowledge.json`；详细说明见 `docs/dify-import.md`。
 
 ## 快速开始
 
@@ -99,13 +99,35 @@ EMBEDDING_DIMENSIONS=1024
 
 如果你有百炼 Workspace 专属 endpoint，建议直接把 `OPENAI_BASE_URL` 换成该地址。
 
-### 3. 构建向量索引
+### 3. 导入 Dify 知识库并构建索引
+
+`.env` 中填写：
+
+```env
+DIFY_BASE_URL=https://glassesai.0744trip.com/
+DIFY_DATASET_API_KEY=your-dataset-api-key
+DIFY_DATASET_ID=your-dataset-id
+```
+
+只导出 Dify chunks 到 `data/knowledge.json`：
+
+```bash
+uv run python scripts/import_dify.py
+```
+
+导入后直接重建 Qdrant：
+
+```bash
+uv run python scripts/import_dify.py --reindex
+```
+
+如果只想手工维护 `data/knowledge.json`，也可以单独执行：
 
 ```bash
 uv run python scripts/index_knowledge.py
 ```
 
-如果只想索引 `data/knowledge.json`：
+只索引 `data/knowledge.json`，不加入景点静态解说：
 
 ```bash
 uv run python scripts/index_knowledge.py --no-scenic
@@ -188,6 +210,7 @@ src/rag_chatflow/
 ├── llm.py          # OpenAI-compatible 文本/视觉模型
 ├── vectorstore.py  # Qdrant 与混合排序
 ├── history.py      # JSON 历史问题存储
+├── dify_import.py  # Dify Knowledge API 导入器
 ├── resources.py    # 静态资源读取
 ├── prompts.py      # Prompt
 ├── models.py       # Pydantic / Graph state
@@ -200,13 +223,17 @@ resources/
 
 data/
 └── knowledge.json
+
+scripts/
+├── import_dify.py
+└── index_knowledge.py
 ```
 
 ## 下一步
 
 初版之后优先做这几件事：
 
-1. 导出原 Dify 知识库文档/chunk，补齐真实 RAG 数据。
+1. 用真实 Dify Knowledge API Key 跑一次知识库导入并对齐 chunk 数量。
 2. 用同一批测试问题同时跑 Dify 和本项目，比较路由、检索召回、回答正确率和延迟。
 3. 根据数据决定是否改成 Qdrant 原生 sparse+dense hybrid retrieval 和 rerank。
 4. 增加 SSE 流式响应。
