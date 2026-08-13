@@ -66,6 +66,8 @@ Qdrant 初版无需 Docker 或独立数据库进程，数据直接写入 `.data/
 
 Dify 原知识库可以通过 `scripts/import_dify.py` 直接读取已有 document/chunk，生成 `data/knowledge.json`；当前自部署环境默认使用浏览器 Cookie 调用 Console API，详细说明见 `docs/dify-import.md`。
 
+`resources/scenic_introductions.json` 只保留为图片识别链路的静态景点解说资源，不再写入 Qdrant。文本 RAG 的索引来源只使用 `data/knowledge.json`，避免与 Dify 知识库中已有的景点介绍重复。
+
 ## 快速开始
 
 ### 1. 安装依赖
@@ -134,11 +136,7 @@ uv run python scripts/import_dify.py --reindex
 uv run python scripts/index_knowledge.py
 ```
 
-只索引 `data/knowledge.json`，不加入景点静态解说：
-
-```bash
-uv run python scripts/index_knowledge.py --no-scenic
-```
+这两个建索引入口现在都只索引 `data/knowledge.json`。
 
 自定义知识数据格式：
 
