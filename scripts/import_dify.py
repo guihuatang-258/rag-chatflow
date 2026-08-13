@@ -22,11 +22,6 @@ def main() -> None:
         help="Rebuild the local Qdrant collection immediately after importing",
     )
     parser.add_argument(
-        "--no-scenic",
-        action="store_true",
-        help="With --reindex, do not include scenic introductions in Qdrant",
-    )
-    parser.add_argument(
         "--include-disabled",
         action="store_true",
         help="Also import disabled or archived Dify documents/chunks",
@@ -90,10 +85,7 @@ def main() -> None:
     )
 
     if args.reindex:
-        index_documents = load_index_documents(
-            settings,
-            include_scenic=not args.no_scenic,
-        )
+        index_documents = load_index_documents(settings)
         count = rebuild_index(settings, index_documents)
         print(
             f"Indexed {count} documents into "

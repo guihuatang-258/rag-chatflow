@@ -85,26 +85,17 @@ class QdrantRetriever:
         return list(response.data[0].embedding)
 
 
-def load_index_documents(settings: Settings, include_scenic: bool = True) -> list[KnowledgeDocument]:
+def load_index_documents(settings: Settings) -> list[KnowledgeDocument]:
+    """Load only the canonical knowledge JSON used by text retrieval.
+
+    Scenic introductions remain static resources for the image-recognition workflow and
+    are intentionally not duplicated into Qdrant.
+    """
     docs: list[KnowledgeDocument] = []
     if settings.knowledge_path.exists():
         raw = json.loads(settings.knowledge_path.read_text(encoding="utf-8"))
         docs.extend(KnowledgeDocument.model_validate(item) for item in raw)
 
-    if include_scenic:
-        intro_path = settings.resource_dir / "scenic_introductions.json"
-        if intro_path.exists():
-            introductions = json.loads(intro_path.read_text(encoding="utf-8"))
-            for name, text in introductions.items():
-                docs.append(
-                    KnowledgeDocument(
-                        id=f"scenic:{name}",
-                        title=name,
-                        text=text,
-                        source="resources/scenic_introductions.json",
-                        metadata={"type": "scenic_introduction", "scenic_name": name},
-                    )
-                )
     deduped = {doc.id: doc for doc in docs}
     return list(deduped.values())
 
