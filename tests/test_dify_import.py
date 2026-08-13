@@ -1,5 +1,8 @@
+import pytest
+
 from rag_chatflow.dify_import import (
     DifyKnowledgeClient,
+    extract_cookie_value,
     import_dataset,
     normalize_cookie,
     normalize_dify_root_url,
@@ -17,17 +20,43 @@ def test_normalize_cookie() -> None:
     assert normalize_cookie("Cookie: access_token=abc; foo=bar") == "access_token=abc; foo=bar"
 
 
-def test_client_prefers_cookie_in_auto_mode() -> None:
+def test_extract_csrf_token_from_cookie() -> None:
+    cookie = (
+        "locale=zh-Hans; csrf_token=eyJh; access_token=eyJhb; "
+        "refresh_token=994f63d7"
+    )
+    assert extract_cookie_value(cookie, "csrf_token") == "eyJh"
+
+
+def test_extract_host_prefixed_csrf_token_from_cookie() -> None:
+    cookie = "__Host-csrf_token=csrf-123; __Host-access_token=access-123"
+    assert extract_cookie_value(cookie, "csrf_token") == "csrf-123"
+
+
+def test_client_prefers_cookie_in_auto_mode_and_sets_csrf_header() -> None:
     client = DifyKnowledgeClient(
         "https://example.com/",
         dataset_id="dataset-1",
-        cookie="access_token=abc",
+        cookie="csrf_token=csrf-123; access_token=abc",
         api_key="dataset-key",
         auth_mode="auto",
     )
+    headers = client._headers()
+
     assert client.auth_mode == "cookie"
     assert client.base_url == "https://example.com/console/api"
-    assert client._headers()["Cookie"] == "access_token=abc"
+    assert headers["Cookie"] == "csrf_token=csrf-123; access_token=abc"
+    assert headers["X-CSRF-Token"] == "csrf-123"
+
+
+def test_cookie_mode_requires_csrf_token_inside_cookie() -> None:
+    with pytest.raises(ValueError, match="csrf_token"):
+        DifyKnowledgeClient(
+            "https://example.com/",
+            dataset_id="dataset-1",
+            cookie="access_token=abc",
+            auth_mode="cookie",
+        )
 
 
 def test_client_api_key_mode_uses_service_api() -> None:
