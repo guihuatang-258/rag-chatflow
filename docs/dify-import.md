@@ -98,10 +98,12 @@ Dify QA 类型的 chunk 如果包含单独的 `answer` 字段，会把答案附�
 uv run python scripts/import_dify.py --reindex
 ```
 
-默认仍会把 `resources/scenic_introductions.json` 中的景点解说一起放进 Qdrant。只想索引 Dify 知识库时：
+Qdrant 的文本 RAG 索引现在只来源于 `data/knowledge.json`。`resources/scenic_introductions.json` 不再重复写入 Qdrant，它只保留给图片识别链路在景点匹配命中后生成景点介绍。
+
+如果已经有本地 `data/knowledge.json`，只想重新构建 Qdrant，也可以运行：
 
 ```bash
-uv run python scripts/import_dify.py --reindex --no-scenic
+uv run python scripts/index_knowledge.py
 ```
 
 ## 5. API Key 模式（备用）
