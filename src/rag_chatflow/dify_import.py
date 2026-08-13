@@ -3,21 +3,32 @@ from __future__ import annotations
 import json
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Iterable
+from typing import Any, Iterable, Literal
 from urllib.error import HTTPError, URLError
 from urllib.parse import urlencode
 from urllib.request import Request, urlopen
 
 from .models import KnowledgeDocument
 
+DifyAuthMode = Literal["auto", "cookie", "api_key"]
 
-def normalize_dify_base_url(base_url: str) -> str:
-    """Normalize a Dify host/root URL to its API `/v1` base."""
+
+def normalize_dify_root_url(base_url: str) -> str:
+    """Normalize a Dify URL to its deployment root, without API suffixes."""
     value = base_url.strip().rstrip("/")
     if not value:
         raise ValueError("DIFY_BASE_URL 不能为空")
-    if not value.endswith("/v1"):
-        value = f"{value}/v1"
+    for suffix in ("/console/api", "/v1"):
+        if value.endswith(suffix):
+            value = value[: -len(suffix)]
+            break
+    return value.rstrip("/")
+
+
+def normalize_cookie(cookie: str) -> str:
+    value = cookie.strip()
+    if value.lower().startswith("cookie:"):
+        value = value.split(":", 1)[1].strip()
     return value
 
 
@@ -25,39 +36,75 @@ class DifyKnowledgeClient:
     def __init__(
         self,
         base_url: str,
-        api_key: str,
-        dataset_id: str,
+        dataset_id: str = "",
+        *,
+        cookie: str = "",
+        api_key: str = "",
+        csrf_token: str = "",
+        auth_mode: DifyAuthMode = "auto",
         timeout_seconds: float = 30.0,
     ) -> None:
-        if not api_key.strip():
-            raise ValueError("DIFY_DATASET_API_KEY 未配置")
-        if not dataset_id.strip():
-            raise ValueError("DIFY_DATASET_ID 未配置")
-        self.base_url = normalize_dify_base_url(base_url)
+        self.root_url = normalize_dify_root_url(base_url)
+        self.cookie = normalize_cookie(cookie)
         self.api_key = api_key.strip()
+        self.csrf_token = csrf_token.strip()
+        self.auth_mode = self._resolve_auth_mode(auth_mode)
         self.dataset_id = dataset_id.strip()
         self.timeout_seconds = timeout_seconds
+        self.base_url = (
+            f"{self.root_url}/console/api"
+            if self.auth_mode == "cookie"
+            else f"{self.root_url}/v1"
+        )
+
+    def _resolve_auth_mode(self, auth_mode: DifyAuthMode) -> Literal["cookie", "api_key"]:
+        if auth_mode not in {"auto", "cookie", "api_key"}:
+            raise ValueError("DIFY_AUTH_MODE 只能是 auto、cookie 或 api_key")
+        if auth_mode == "cookie":
+            if not self.cookie:
+                raise ValueError("DIFY_COOKIE 未配置")
+            return "cookie"
+        if auth_mode == "api_key":
+            if not self.api_key:
+                raise ValueError("DIFY_DATASET_API_KEY 未配置")
+            return "api_key"
+        if self.cookie:
+            return "cookie"
+        if self.api_key:
+            return "api_key"
+        raise ValueError("DIFY_COOKIE 和 DIFY_DATASET_API_KEY 至少配置一个")
+
+    def _headers(self) -> dict[str, str]:
+        headers = {
+            "Accept": "application/json",
+            "User-Agent": "rag-chatflow/0.1",
+        }
+        if self.auth_mode == "cookie":
+            headers["Cookie"] = self.cookie
+            headers["Referer"] = f"{self.root_url}/datasets"
+            if self.csrf_token:
+                headers["X-CSRF-Token"] = self.csrf_token
+        else:
+            headers["Authorization"] = f"Bearer {self.api_key}"
+        return headers
 
     def _get_json(self, path: str, params: dict[str, Any] | None = None) -> dict[str, Any]:
         url = f"{self.base_url}{path}"
         if params:
-            url = f"{url}?{urlencode(params)}"
-        request = Request(
-            url,
-            method="GET",
-            headers={
-                "Authorization": f"Bearer {self.api_key}",
-                "Accept": "application/json",
-                "User-Agent": "rag-chatflow/0.1",
-            },
-        )
+            url = f"{url}?{urlencode(params, doseq=True)}"
+        request = Request(url, method="GET", headers=self._headers())
         try:
             with urlopen(request, timeout=self.timeout_seconds) as response:
                 body = response.read().decode("utf-8")
         except HTTPError as exc:
             detail = exc.read().decode("utf-8", errors="replace")
+            auth_hint = (
+                "；Cookie 可能已过期，请从浏览器已登录 Dify 的请求中重新复制 Cookie"
+                if self.auth_mode == "cookie" and exc.code in {401, 403}
+                else ""
+            )
             raise RuntimeError(
-                f"Dify API 请求失败: HTTP {exc.code} {path}; {detail[:500]}"
+                f"Dify API 请求失败: HTTP {exc.code} {path}; {detail[:500]}{auth_hint}"
             ) from exc
         except URLError as exc:
             raise RuntimeError(f"无法连接 Dify API: {exc.reason}") from exc
@@ -70,7 +117,19 @@ class DifyKnowledgeClient:
             raise RuntimeError(f"Dify API 返回格式异常: {path}")
         return payload
 
+    def iter_datasets(self) -> Iterable[dict[str, Any]]:
+        page = 1
+        limit = 100
+        while True:
+            payload = self._get_json("/datasets", {"page": page, "limit": limit})
+            items = _payload_items(payload, "Dify 知识库列表")
+            yield from items
+            if not _has_next_page(payload, page=page, limit=limit, item_count=len(items)):
+                break
+            page += 1
+
     def iter_documents(self) -> Iterable[dict[str, Any]]:
+        self._ensure_dataset_id()
         page = 1
         limit = 100
         while True:
@@ -78,32 +137,14 @@ class DifyKnowledgeClient:
                 f"/datasets/{self.dataset_id}/documents",
                 {"page": page, "limit": limit},
             )
-            items = payload.get("data") or []
-            if not isinstance(items, list):
-                raise RuntimeError("Dify 文档列表 data 字段不是数组")
-            yield from (item for item in items if isinstance(item, dict))
-
-            if payload.get("has_more") is False:
-                break
-            if payload.get("has_more") is True:
-                page += 1
-                continue
-
-            total_pages = _as_int(payload.get("total_pages"))
-            if total_pages is not None:
-                if page >= total_pages:
-                    break
-                page += 1
-                continue
-
-            total = _as_int(payload.get("total"))
-            if total is not None and page * limit >= total:
-                break
-            if len(items) < limit:
+            items = _payload_items(payload, "Dify 文档列表")
+            yield from items
+            if not _has_next_page(payload, page=page, limit=limit, item_count=len(items)):
                 break
             page += 1
 
     def iter_segments(self, document_id: str) -> Iterable[dict[str, Any]]:
+        self._ensure_dataset_id()
         page = 1
         limit = 100
         while True:
@@ -111,30 +152,15 @@ class DifyKnowledgeClient:
                 f"/datasets/{self.dataset_id}/documents/{document_id}/segments",
                 {"page": page, "limit": limit},
             )
-            items = payload.get("data") or []
-            if not isinstance(items, list):
-                raise RuntimeError(f"Dify chunks data 字段不是数组: document={document_id}")
-            yield from (item for item in items if isinstance(item, dict))
-
-            if payload.get("has_more") is False:
-                break
-            if payload.get("has_more") is True:
-                page += 1
-                continue
-
-            total_pages = _as_int(payload.get("total_pages"))
-            if total_pages is not None:
-                if page >= total_pages:
-                    break
-                page += 1
-                continue
-
-            total = _as_int(payload.get("total"))
-            if total is not None and page * limit >= total:
-                break
-            if len(items) < limit:
+            items = _payload_items(payload, f"Dify chunks: document={document_id}")
+            yield from items
+            if not _has_next_page(payload, page=page, limit=limit, item_count=len(items)):
                 break
             page += 1
+
+    def _ensure_dataset_id(self) -> None:
+        if not self.dataset_id:
+            raise RuntimeError("DIFY_DATASET_ID 未配置，请先用 --list-datasets 查看真实知识库 ID")
 
 
 @dataclass(slots=True)
@@ -206,8 +232,6 @@ def segment_to_knowledge_document(
     if not document_id or not segment_id or not content:
         return None
 
-    # In Dify QA-style chunks, the answer is stored separately. Include it in the indexed
-    # text so the downstream RAG prompt receives the same useful information.
     text = content
     if answer:
         text = f"{content}\n\n答案：{answer}"
@@ -243,6 +267,29 @@ def write_knowledge_json(path: Path, documents: list[KnowledgeDocument]) -> None
         json.dumps(payload, ensure_ascii=False, indent=2) + "\n",
         encoding="utf-8",
     )
+
+
+def _payload_items(payload: dict[str, Any], label: str) -> list[dict[str, Any]]:
+    items = payload.get("data") or []
+    if not isinstance(items, list):
+        raise RuntimeError(f"{label} data 字段不是数组")
+    return [item for item in items if isinstance(item, dict)]
+
+
+def _has_next_page(payload: dict[str, Any], *, page: int, limit: int, item_count: int) -> bool:
+    has_more = payload.get("has_more")
+    if isinstance(has_more, bool):
+        return has_more
+
+    total_pages = _as_int(payload.get("total_pages"))
+    if total_pages is not None:
+        return page < total_pages
+
+    total = _as_int(payload.get("total"))
+    if total is not None:
+        return page * limit < total
+
+    return item_count >= limit
 
 
 def _document_disabled(document: dict[str, Any]) -> bool:

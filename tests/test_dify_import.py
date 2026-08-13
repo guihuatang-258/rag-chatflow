@@ -1,14 +1,44 @@
 from rag_chatflow.dify_import import (
     DifyKnowledgeClient,
     import_dataset,
-    normalize_dify_base_url,
+    normalize_cookie,
+    normalize_dify_root_url,
     segment_to_knowledge_document,
 )
 
 
-def test_normalize_dify_base_url() -> None:
-    assert normalize_dify_base_url("https://example.com/") == "https://example.com/v1"
-    assert normalize_dify_base_url("https://example.com/v1/") == "https://example.com/v1"
+def test_normalize_dify_root_url() -> None:
+    assert normalize_dify_root_url("https://example.com/") == "https://example.com"
+    assert normalize_dify_root_url("https://example.com/v1/") == "https://example.com"
+    assert normalize_dify_root_url("https://example.com/console/api/") == "https://example.com"
+
+
+def test_normalize_cookie() -> None:
+    assert normalize_cookie("Cookie: access_token=abc; foo=bar") == "access_token=abc; foo=bar"
+
+
+def test_client_prefers_cookie_in_auto_mode() -> None:
+    client = DifyKnowledgeClient(
+        "https://example.com/",
+        dataset_id="dataset-1",
+        cookie="access_token=abc",
+        api_key="dataset-key",
+        auth_mode="auto",
+    )
+    assert client.auth_mode == "cookie"
+    assert client.base_url == "https://example.com/console/api"
+    assert client._headers()["Cookie"] == "access_token=abc"
+
+
+def test_client_api_key_mode_uses_service_api() -> None:
+    client = DifyKnowledgeClient(
+        "https://example.com/console/api",
+        dataset_id="dataset-1",
+        api_key="dataset-key",
+        auth_mode="api_key",
+    )
+    assert client.base_url == "https://example.com/v1"
+    assert client._headers()["Authorization"] == "Bearer dataset-key"
 
 
 def test_segment_to_knowledge_document_preserves_dify_metadata() -> None:
