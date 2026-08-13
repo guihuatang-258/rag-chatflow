@@ -173,27 +173,17 @@ GET /health
 ### 文本问答
 
 ```bash
-curl -X POST http://127.0.0.1:8000/v1/chat \
-  -H "Content-Type: application/json" \
-  -d '{
-    "thread_id": "demo-1",
-    "query": "五指峰有什么特点？",
-    "debug": true
-  }'
+curl.exe -X POST "http://127.0.0.1:8000/v1/chat" `
+  -H "Content-Type: application/json" `
+  -d '{"thread_id":"demo-1","query":"五指峰有什么特点？","debug":true}'
 ```
 
 ### 图片 URL
 
 ```bash
-curl -X POST http://127.0.0.1:8000/v1/chat \
-  -H "Content-Type: application/json" \
-  -d '{
-    "thread_id": "demo-image",
-    "image_urls": ["https://example.com/photo.jpg"],
-    "scenic_name": "五指峰",
-    "language": 1,
-    "debug": true
-  }'
+curl.exe -X POST "http://127.0.0.1:8000/v1/chat" `
+  -H "Content-Type: application/json" `
+  -d '{"thread_id":"demo-image","image_urls":["https://example.com/photo.jpg"],"scenic_name":"五指峰","language":1,"debug":true}'
 ```
 
 `language` 与原 Dify Workflow 一致：1 中文，2 英文，3 日文，4 韩文，5 俄文，6 阿拉伯语，7 法语，8 西班牙语，9 葡萄牙语，10 德语，11 越南语，12 希伯来语，13 泰语，14 马来语。
@@ -201,10 +191,10 @@ curl -X POST http://127.0.0.1:8000/v1/chat \
 ### 本地上传图片
 
 ```bash
-curl -X POST http://127.0.0.1:8000/v1/chat/upload \
-  -F "files=@photo.jpg" \
-  -F "scenic_name=五指峰" \
-  -F "language=1" \
+curl -X POST http://127.0.0.1:8000/v1/chat/upload `
+  -F "files=@photo.jpg" `
+  -F "scenic_name=五指峰" `
+  -F "language=1" `
   -F "debug=true"
 ```
 
