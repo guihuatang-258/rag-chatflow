@@ -58,7 +58,6 @@ def main() -> None:
         dataset_id=dataset_id,
         cookie=settings.dify_cookie,
         api_key=settings.dify_dataset_api_key,
-        csrf_token=settings.dify_csrf_token,
         auth_mode=auth_mode,
         timeout_seconds=settings.dify_request_timeout_seconds,
     )

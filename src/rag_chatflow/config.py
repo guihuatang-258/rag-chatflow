@@ -22,7 +22,6 @@ class Settings(BaseSettings):
     dify_base_url: str = "https://glassesai.0744trip.com/"
     dify_auth_mode: str = "cookie"
     dify_cookie: str = ""
-    dify_csrf_token: str = ""
     dify_dataset_api_key: str = ""
     dify_dataset_id: str = ""
     dify_request_timeout_seconds: float = 30.0

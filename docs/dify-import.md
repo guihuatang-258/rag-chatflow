@@ -34,15 +34,21 @@ DIFY_DATASET_ID=真实知识库UUID
 
 `DIFY_COOKIE` 建议从浏览器开发者工具获取：登录 Dify → Network → 打开任意 `/console/api/...` 请求 → Request Headers → 复制 `Cookie` 的值。可以只复制值，也可以连 `Cookie:` 前缀一起复制，导入器会自动处理。
 
-Cookie 属于登录凭证，只放在本机 `.env`，不要粘贴到代码、Issue、PR 或提交进 Git。Cookie 失效后重新复制即可。
+典型 Cookie 类似：
 
-如果你的反向代理还要求 CSRF Header，可额外配置：
-
-```env
-DIFY_CSRF_TOKEN=...
+```text
+locale=zh-Hans; csrf_token=...; access_token=...; refresh_token=...
 ```
 
-当前导入器只有 GET 请求，标准 Dify Console API 通常不需要为这些 GET 单独提供 CSRF Token。
+Dify Console API 要求 `X-CSRF-Token` 与 Cookie 中的 `csrf_token` 一致。导入器会自动从 `DIFY_COOKIE` 中提取名字以 `csrf_token` 结尾的 Cookie（同时兼容 `__Host-csrf_token`），并自动发送：
+
+```text
+X-CSRF-Token: <cookie 中的 csrf_token>
+```
+
+因此**不需要单独配置 CSRF Token**。如果 Cookie 中没有 `csrf_token`，导入器会在发请求前直接报错。
+
+Cookie 属于登录凭证，只放在本机 `.env`，不要粘贴到代码、Issue、PR 或提交进 Git。Cookie 或其中的 CSRF Token 失效后，重新从同一条已登录 `/console/api/...` 请求复制完整 Cookie 即可。
 
 ## 2. 查找真实知识库 ID
 
@@ -55,7 +61,7 @@ uv run python scripts/import_dify.py --list-datasets
 输出示例：
 
 ```text
-7f8d...-...\t武陵源知识库 documents=12
+7f8d...-...	武陵源知识库 documents=12
 ```
 
 把目标知识库的 UUID 填入：
@@ -146,7 +152,18 @@ uv run python scripts/import_dify.py --include-disabled
 
 ## 常见错误
 
-### 401 / 403
+### `401: CSRF token is missing or invalid`
+
+这通常不是“Cookie 变量没传”，而是以下几种情况之一：
+
+- Cookie 中没有 `csrf_token`；
+- `csrf_token` 和 `access_token` 不是从同一登录会话复制的；
+- Cookie/CSRF Token 已过期；
+- 复制 Cookie 时漏掉了部分内容。
+
+导入器会自动把 Cookie 中的 `csrf_token` 放到 `X-CSRF-Token`，因此出现该错误时，直接重新登录 Dify，并从**同一条 `/console/api/...` 请求**复制完整 Cookie。
+
+### 其他 401 / 403
 
 Cookie 模式下一般表示浏览器登录态已经失效，重新登录 Dify 并复制最新 Cookie。
 

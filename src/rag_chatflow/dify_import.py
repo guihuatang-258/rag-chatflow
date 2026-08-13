@@ -32,6 +32,21 @@ def normalize_cookie(cookie: str) -> str:
     return value
 
 
+def extract_cookie_value(cookie: str, name_suffix: str) -> str:
+    """Return the first cookie whose name ends with ``name_suffix``.
+
+    Dify may use the plain ``csrf_token`` cookie name or the secure
+    ``__Host-csrf_token`` form. Matching by suffix mirrors Dify's own
+    console client.
+    """
+    normalized = normalize_cookie(cookie)
+    for part in normalized.split(";"):
+        name, separator, value = part.strip().partition("=")
+        if separator and name.strip().endswith(name_suffix):
+            return value.strip()
+    return ""
+
+
 class DifyKnowledgeClient:
     def __init__(
         self,
@@ -40,14 +55,13 @@ class DifyKnowledgeClient:
         *,
         cookie: str = "",
         api_key: str = "",
-        csrf_token: str = "",
         auth_mode: DifyAuthMode = "auto",
         timeout_seconds: float = 30.0,
     ) -> None:
         self.root_url = normalize_dify_root_url(base_url)
         self.cookie = normalize_cookie(cookie)
         self.api_key = api_key.strip()
-        self.csrf_token = csrf_token.strip()
+        self.csrf_token = extract_cookie_value(self.cookie, "csrf_token")
         self.auth_mode = self._resolve_auth_mode(auth_mode)
         self.dataset_id = dataset_id.strip()
         self.timeout_seconds = timeout_seconds
@@ -61,18 +75,27 @@ class DifyKnowledgeClient:
         if auth_mode not in {"auto", "cookie", "api_key"}:
             raise ValueError("DIFY_AUTH_MODE 只能是 auto、cookie 或 api_key")
         if auth_mode == "cookie":
-            if not self.cookie:
-                raise ValueError("DIFY_COOKIE 未配置")
+            self._ensure_cookie_auth()
             return "cookie"
         if auth_mode == "api_key":
             if not self.api_key:
                 raise ValueError("DIFY_DATASET_API_KEY 未配置")
             return "api_key"
         if self.cookie:
+            self._ensure_cookie_auth()
             return "cookie"
         if self.api_key:
             return "api_key"
         raise ValueError("DIFY_COOKIE 和 DIFY_DATASET_API_KEY 至少配置一个")
+
+    def _ensure_cookie_auth(self) -> None:
+        if not self.cookie:
+            raise ValueError("DIFY_COOKIE 未配置")
+        if not self.csrf_token:
+            raise ValueError(
+                "DIFY_COOKIE 中未找到 csrf_token；请从浏览器已登录 Dify 的同一条 "
+                "/console/api 请求中复制完整 Cookie"
+            )
 
     def _headers(self) -> dict[str, str]:
         headers = {
@@ -81,9 +104,8 @@ class DifyKnowledgeClient:
         }
         if self.auth_mode == "cookie":
             headers["Cookie"] = self.cookie
+            headers["X-CSRF-Token"] = self.csrf_token
             headers["Referer"] = f"{self.root_url}/datasets"
-            if self.csrf_token:
-                headers["X-CSRF-Token"] = self.csrf_token
         else:
             headers["Authorization"] = f"Bearer {self.api_key}"
         return headers
@@ -98,11 +120,17 @@ class DifyKnowledgeClient:
                 body = response.read().decode("utf-8")
         except HTTPError as exc:
             detail = exc.read().decode("utf-8", errors="replace")
-            auth_hint = (
-                "；Cookie 可能已过期，请从浏览器已登录 Dify 的请求中重新复制 Cookie"
-                if self.auth_mode == "cookie" and exc.code in {401, 403}
-                else ""
-            )
+            auth_hint = ""
+            if self.auth_mode == "cookie" and exc.code in {401, 403}:
+                if "csrf token" in detail.lower():
+                    auth_hint = (
+                        "；CSRF 校验失败：导入器已从 DIFY_COOKIE 自动读取 csrf_token，"
+                        "请确认 Cookie 来自同一条已登录 /console/api 请求且仍在有效期内"
+                    )
+                else:
+                    auth_hint = (
+                        "；Cookie 登录态可能已过期，请从浏览器已登录 Dify 的请求中重新复制完整 Cookie"
+                    )
             raise RuntimeError(
                 f"Dify API 请求失败: HTTP {exc.code} {path}; {detail[:500]}{auth_hint}"
             ) from exc
