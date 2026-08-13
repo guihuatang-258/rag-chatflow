@@ -104,39 +104,65 @@ def rebuild_index(settings: Settings, docs: list[KnowledgeDocument]) -> int:
     settings.ensure_api_key()
     settings.qdrant_path.parent.mkdir(parents=True, exist_ok=True)
     client = QdrantClient(path=str(settings.qdrant_path))
-    if client.collection_exists(settings.qdrant_collection):
-        client.delete_collection(settings.qdrant_collection)
-    client.create_collection(
-        collection_name=settings.qdrant_collection,
-        vectors_config=models.VectorParams(
-            size=settings.embedding_dimensions,
-            distance=models.Distance.COSINE,
-        ),
-    )
-
-    embedder = OpenAI(api_key=settings.openai_api_key, base_url=settings.openai_base_url)
-    batch_size = 10
-    for start in range(0, len(docs), batch_size):
-        batch = docs[start : start + batch_size]
-        response = embedder.embeddings.create(
-            model=settings.embedding_model,
-            input=[doc.text for doc in batch],
-            dimensions=settings.embedding_dimensions,
-            encoding_format="float",
-        )
-        points = []
-        for doc, item in zip(batch, response.data, strict=True):
-            point_id = hashlib.md5(doc.id.encode("utf-8"), usedforsecurity=False).hexdigest()
-            points.append(
-                models.PointStruct(
-                    id=point_id,
-                    vector=list(item.embedding),
-                    payload=doc.model_dump(),
-                )
+    try:
+        if client.collection_exists(settings.qdrant_collection):
+            _ensure_compatible_collection(client, settings)
+            # Qdrant Local keeps the collection's SQLite connection open. On Windows,
+            # delete_collection() therefore cannot remove storage.sqlite, and its
+            # ignored rmtree error causes old points to reappear in the new collection.
+            # Deleting all points through Qdrant avoids that platform-specific leak.
+            client.delete(
+                collection_name=settings.qdrant_collection,
+                points_selector=models.FilterSelector(filter=models.Filter()),
+                wait=True,
             )
-        client.upsert(collection_name=settings.qdrant_collection, points=points, wait=True)
-    client.close()
+        else:
+            client.create_collection(
+                collection_name=settings.qdrant_collection,
+                vectors_config=models.VectorParams(
+                    size=settings.embedding_dimensions,
+                    distance=models.Distance.COSINE,
+                ),
+            )
+
+        embedder = OpenAI(api_key=settings.openai_api_key, base_url=settings.openai_base_url)
+        batch_size = 10
+        for start in range(0, len(docs), batch_size):
+            batch = docs[start : start + batch_size]
+            response = embedder.embeddings.create(
+                model=settings.embedding_model,
+                input=[doc.text for doc in batch],
+                dimensions=settings.embedding_dimensions,
+                encoding_format="float",
+            )
+            points = []
+            for doc, item in zip(batch, response.data, strict=True):
+                point_id = hashlib.md5(doc.id.encode("utf-8"), usedforsecurity=False).hexdigest()
+                points.append(
+                    models.PointStruct(
+                        id=point_id,
+                        vector=list(item.embedding),
+                        payload=doc.model_dump(),
+                    )
+                )
+            client.upsert(collection_name=settings.qdrant_collection, points=points, wait=True)
+    finally:
+        client.close()
     return len(docs)
+
+
+def _ensure_compatible_collection(client: QdrantClient, settings: Settings) -> None:
+    vectors = client.get_collection(settings.qdrant_collection).config.params.vectors
+    compatible = (
+        isinstance(vectors, models.VectorParams)
+        and vectors.size == settings.embedding_dimensions
+        and vectors.distance == models.Distance.COSINE
+    )
+    if not compatible:
+        raise RuntimeError(
+            f"Existing Qdrant collection {settings.qdrant_collection!r} has an incompatible "
+            "vector configuration; remove it while the application is stopped, then reindex"
+        )
 
 
 def _keyword_score(query: str, text: str) -> float:
