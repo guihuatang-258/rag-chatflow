@@ -20,6 +20,9 @@ class Settings(BaseSettings):
     enable_web_search: bool = True
 
     dify_base_url: str = "https://glassesai.0744trip.com/"
+    dify_auth_mode: str = "cookie"
+    dify_cookie: str = ""
+    dify_csrf_token: str = ""
     dify_dataset_api_key: str = ""
     dify_dataset_id: str = ""
     dify_request_timeout_seconds: float = 30.0
@@ -39,10 +42,21 @@ class Settings(BaseSettings):
         if not self.openai_api_key:
             raise RuntimeError("OPENAI_API_KEY 未配置，请先复制 .env.example 为 .env 并填写 API Key")
 
-    def ensure_dify_config(self, dataset_id: str | None = None) -> None:
-        if not self.dify_dataset_api_key:
-            raise RuntimeError(
-                "DIFY_DATASET_API_KEY 未配置，请在 Dify 知识库的 API 页面创建知识库 API Key"
-            )
-        if not (dataset_id or self.dify_dataset_id).strip():
-            raise RuntimeError("DIFY_DATASET_ID 未配置，请填写要迁移的知识库 ID")
+    def ensure_dify_config(
+        self,
+        dataset_id: str | None = None,
+        *,
+        require_dataset: bool = True,
+        auth_mode: str | None = None,
+    ) -> None:
+        mode = (auth_mode or self.dify_auth_mode or "auto").strip().lower()
+        if mode not in {"auto", "cookie", "api_key"}:
+            raise RuntimeError("DIFY_AUTH_MODE 只能是 auto、cookie 或 api_key")
+        if mode == "cookie" and not self.dify_cookie.strip():
+            raise RuntimeError("DIFY_COOKIE 未配置，请从已登录 Dify 的浏览器请求中复制 Cookie")
+        if mode == "api_key" and not self.dify_dataset_api_key.strip():
+            raise RuntimeError("DIFY_DATASET_API_KEY 未配置")
+        if mode == "auto" and not (self.dify_cookie.strip() or self.dify_dataset_api_key.strip()):
+            raise RuntimeError("DIFY_COOKIE 和 DIFY_DATASET_API_KEY 至少配置一个")
+        if require_dataset and not (dataset_id or self.dify_dataset_id).strip():
+            raise RuntimeError("DIFY_DATASET_ID 未配置，可先运行 import_dify.py --list-datasets")

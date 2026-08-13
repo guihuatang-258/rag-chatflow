@@ -64,7 +64,7 @@ Qdrant 初版无需 Docker 或独立数据库进程，数据直接写入 `.data/
 
 初版使用 Qdrant 做 dense vector retrieval，再对候选结果执行一个轻量关键词匹配并按 `0.6 vector + 0.4 keyword` 融合排序。这样暂时不需要再引入 Elasticsearch/OpenSearch。
 
-Dify 原知识库可以通过 `scripts/import_dify.py` 直接读取已有 document/chunk，生成 `data/knowledge.json`；详细说明见 `docs/dify-import.md`。
+Dify 原知识库可以通过 `scripts/import_dify.py` 直接读取已有 document/chunk，生成 `data/knowledge.json`；当前自部署环境默认使用浏览器 Cookie 调用 Console API，详细说明见 `docs/dify-import.md`。
 
 ## 快速开始
 
@@ -101,15 +101,22 @@ EMBEDDING_DIMENSIONS=1024
 
 ### 3. 导入 Dify 知识库并构建索引
 
-`.env` 中填写：
+当前 Dify 环境使用 Cookie 登录态，`.env` 中填写：
 
 ```env
 DIFY_BASE_URL=https://glassesai.0744trip.com/
-DIFY_DATASET_API_KEY=your-dataset-api-key
-DIFY_DATASET_ID=your-dataset-id
+DIFY_AUTH_MODE=cookie
+DIFY_COOKIE=从已登录浏览器请求中复制的完整Cookie值
+DIFY_DATASET_ID=
 ```
 
-只导出 Dify chunks 到 `data/knowledge.json`：
+先列出可访问知识库并获取真实 UUID：
+
+```bash
+uv run python scripts/import_dify.py --list-datasets
+```
+
+把目标 UUID 填入 `DIFY_DATASET_ID` 后，只导出 Dify chunks 到 `data/knowledge.json`：
 
 ```bash
 uv run python scripts/import_dify.py
@@ -210,7 +217,7 @@ src/rag_chatflow/
 ├── llm.py          # OpenAI-compatible 文本/视觉模型
 ├── vectorstore.py  # Qdrant 与混合排序
 ├── history.py      # JSON 历史问题存储
-├── dify_import.py  # Dify Knowledge API 导入器
+├── dify_import.py  # Dify Console/Knowledge API 导入器
 ├── resources.py    # 静态资源读取
 ├── prompts.py      # Prompt
 ├── models.py       # Pydantic / Graph state
@@ -233,7 +240,7 @@ scripts/
 
 初版之后优先做这几件事：
 
-1. 用真实 Dify Knowledge API Key 跑一次知识库导入并对齐 chunk 数量。
+1. 用真实 Dify Cookie 跑一次知识库导入并对齐 document/chunk 数量。
 2. 用同一批测试问题同时跑 Dify 和本项目，比较路由、检索召回、回答正确率和延迟。
 3. 根据数据决定是否改成 Qdrant 原生 sparse+dense hybrid retrieval 和 rerank。
 4. 增加 SSE 流式响应。

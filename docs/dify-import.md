@@ -2,27 +2,75 @@
 
 当前迁移策略是保留 Dify 已经切好的 chunk，不重新切分原始 PDF/Word。这样可以先只比较 Workflow、Embedding 和向量库迁移带来的差异。
 
-## 1. 配置
+## 1. Cookie / Console API 模式（当前环境默认）
 
-复制环境变量：
+你的 Dify 地址是：
+
+```text
+https://glassesai.0744trip.com/
+```
+
+当前环境使用浏览器登录 Cookie 验证，因此默认走 Dify Console API：
+
+```text
+/console/api/datasets/{dataset_id}/documents
+/console/api/datasets/{dataset_id}/documents/{document_id}/segments
+```
+
+先复制环境变量：
 
 ```bash
 cp .env.example .env
 ```
 
-Dify 相关配置：
+配置：
 
 ```env
 DIFY_BASE_URL=https://glassesai.0744trip.com/
-DIFY_DATASET_API_KEY=your-dataset-api-key
-DIFY_DATASET_ID=your-dataset-id
+DIFY_AUTH_MODE=cookie
+DIFY_COOKIE=你的完整Cookie请求头内容
+DIFY_DATASET_ID=真实知识库UUID
 ```
 
-`DIFY_BASE_URL` 可以填写 Dify 根地址，也可以直接填写以 `/v1` 结尾的 API 地址。导入器会自动规范成 `/v1`。
+`DIFY_COOKIE` 建议从浏览器开发者工具获取：登录 Dify → Network → 打开任意 `/console/api/...` 请求 → Request Headers → 复制 `Cookie` 的值。可以只复制值，也可以连 `Cookie:` 前缀一起复制，导入器会自动处理。
 
-`DIFY_DATASET_API_KEY` 必须使用知识库 Knowledge API 的 API Key，不是 Chatflow/App API Key。API Key 不要提交进 Git。
+Cookie 属于登录凭证，只放在本机 `.env`，不要粘贴到代码、Issue、PR 或提交进 Git。Cookie 失效后重新复制即可。
 
-## 2. 只导出 Dify chunks 到 JSON
+如果你的反向代理还要求 CSRF Header，可额外配置：
+
+```env
+DIFY_CSRF_TOKEN=...
+```
+
+当前导入器只有 GET 请求，标准 Dify Console API 通常不需要为这些 GET 单独提供 CSRF Token。
+
+## 2. 查找真实知识库 ID
+
+Dify Workflow DSL 里保存的 dataset ID 可能经过加密，不能直接拿来调用 Console API。可以用当前 Cookie 列出可访问知识库：
+
+```bash
+uv run python scripts/import_dify.py --list-datasets
+```
+
+输出示例：
+
+```text
+7f8d...-...\t武陵源知识库 documents=12
+```
+
+把目标知识库的 UUID 填入：
+
+```env
+DIFY_DATASET_ID=7f8d...-...
+```
+
+也可以运行时临时指定：
+
+```bash
+uv run python scripts/import_dify.py --dataset-id YOUR_DATASET_ID
+```
+
+## 3. 导出 Dify chunks 到 JSON
 
 ```bash
 uv run python scripts/import_dify.py
@@ -38,13 +86,11 @@ uv run python scripts/import_dify.py
 
 Dify QA 类型的 chunk 如果包含单独的 `answer` 字段，会把答案附加到索引文本中，同时在 metadata 中保留原始 answer。
 
-## 3. 导入后直接重建 Qdrant
+## 4. 导入后直接重建 Qdrant
 
 ```bash
 uv run python scripts/import_dify.py --reindex
 ```
-
-这会在成功生成 `data/knowledge.json` 后直接重建本地 Qdrant collection。
 
 默认仍会把 `resources/scenic_introductions.json` 中的景点解说一起放进 Qdrant。只想索引 Dify 知识库时：
 
@@ -52,17 +98,19 @@ uv run python scripts/import_dify.py --reindex
 uv run python scripts/import_dify.py --reindex --no-scenic
 ```
 
-## 4. 临时覆盖知识库 ID
+## 5. API Key 模式（备用）
 
-不想改 `.env` 时，可以只临时覆盖 dataset ID：
+如果以后启用了 Dify Knowledge Service API Key，可以切回 `/v1`：
 
-```bash
-uv run python scripts/import_dify.py --dataset-id YOUR_DATASET_ID
+```env
+DIFY_AUTH_MODE=api_key
+DIFY_DATASET_API_KEY=dataset-xxxx
+DIFY_DATASET_ID=...
 ```
 
-API Key 仍建议只放 `.env`，不要作为命令行参数传入，避免进入 shell history。
+也可以用 `DIFY_AUTH_MODE=auto`：配置了 Cookie 时优先使用 Cookie，否则使用 API Key。
 
-## 5. 导入禁用内容
+## 6. 导入禁用内容
 
 默认行为尽量贴近线上检索：不导入 disabled/archived 内容。如果确实需要完整备份：
 
@@ -100,11 +148,19 @@ uv run python scripts/import_dify.py --include-disabled
 
 ### 401 / 403
 
-通常是 `DIFY_DATASET_API_KEY` 不正确，或者使用了 App API Key 而不是 Knowledge API Key。
+Cookie 模式下一般表示浏览器登录态已经失效，重新登录 Dify 并复制最新 Cookie。
+
+API Key 模式下则检查 `DIFY_DATASET_API_KEY` 是否为 Knowledge API Key。
 
 ### 404
 
-先确认 `DIFY_DATASET_ID` 是否是当前 Dify 实例中的真实知识库 ID，以及反向代理是否暴露 `/v1` API。
+Cookie/Console API 模式要求真实的知识库 UUID。建议先执行：
+
+```bash
+uv run python scripts/import_dify.py --list-datasets
+```
+
+不要直接使用 DSL 中可能加密过的 dataset ID。
 
 ### 无法连接
 
