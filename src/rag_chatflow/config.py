@@ -19,6 +19,11 @@ class Settings(BaseSettings):
     embedding_dimensions: int = 1024
     enable_web_search: bool = True
 
+    dify_base_url: str = "https://glassesai.0744trip.com/"
+    dify_dataset_api_key: str = ""
+    dify_dataset_id: str = ""
+    dify_request_timeout_seconds: float = 30.0
+
     qdrant_path: Path = Path(".data/qdrant")
     qdrant_collection: str = "wulingyuan_knowledge"
     history_path: Path = Path(".data/conversations.json")
@@ -33,3 +38,11 @@ class Settings(BaseSettings):
     def ensure_api_key(self) -> None:
         if not self.openai_api_key:
             raise RuntimeError("OPENAI_API_KEY 未配置，请先复制 .env.example 为 .env 并填写 API Key")
+
+    def ensure_dify_config(self, dataset_id: str | None = None) -> None:
+        if not self.dify_dataset_api_key:
+            raise RuntimeError(
+                "DIFY_DATASET_API_KEY 未配置，请在 Dify 知识库的 API 页面创建知识库 API Key"
+            )
+        if not (dataset_id or self.dify_dataset_id).strip():
+            raise RuntimeError("DIFY_DATASET_ID 未配置，请填写要迁移的知识库 ID")
