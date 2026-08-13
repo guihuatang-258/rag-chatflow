@@ -1,0 +1,64 @@
+{
+  "山": {
+    "中华猕猴桃": {
+      "type": "single",
+      "urls": [
+        "https://glasses.0744trip.com/static/images/中华猕猴桃1.jpg",
+        "https://glasses.0744trip.com/static/images/中华猕猴桃2.jpg"
+      ]
+    },
+    "五指峰": {
+      "type": "single",
+      "urls": [
+        "https://glasses.0744trip.com/static/images/五指峰1.jpg",
+        "https://glasses.0744trip.com/static/images/五指峰2.jpg",
+        "https://glasses.0744trip.com/static/images/五指峰3.jpg"
+      ]
+    },
+    "仙女献花": {
+      "type": "single",
+      "urls": [
+        "https://glasses.0744trip.com/static/images/仙女献花1.jpg",
+        "https://glasses.0744trip.com/static/images/仙女献花2.jpg",
+        "https://glasses.0744trip.com/static/images/仙女献花3.jpg"
+      ]
+    },
+    "八卦炉": {"type": "single", "urls": ["https://glasses.0744trip.com/static/images/八卦炉.jpg"]},
+    "剑指苍穹": {"type": "single", "urls": ["https://glasses.0744trip.com/static/images/剑指苍穹.jpg", "https://glasses.0744trip.com/static/images/剑指苍穹2.jpg"]},
+    "卸甲峰": {"type": "single", "urls": ["https://glasses.0744trip.com/static/images/卸甲峰.jpg", "https://glasses.0744trip.com/static/images/卸甲峰1.jpg", "https://glasses.0744trip.com/static/images/卸甲峰2.jpg"]},
+    "双门迎宾": {"type": "single", "urls": ["https://glasses.0744trip.com/static/images/双门迎宾.jpg", "https://glasses.0744trip.com/static/images/双门迎宾1.jpg"]},
+    "天桥遗墩": {"type": "single", "urls": ["https://glasses.0744trip.com/static/images/天桥遗墩.jpg", "https://glasses.0744trip.com/static/images/天桥遗墩1.jpg", "https://glasses.0744trip.com/static/images/天桥遗墩2.jpg"]},
+    "天然壁画": {"type": "single", "urls": ["https://glasses.0744trip.com/static/images/天然壁画.jpg", "https://glasses.0744trip.com/static/images/天然壁画1.jpg", "https://glasses.0744trip.com/static/images/天然壁画2.jpg", "https://glasses.0744trip.com/static/images/天然壁画3.jpg"]},
+    "师徒会": {"type": "single", "urls": ["https://glasses.0744trip.com/static/images/师徒会1.jpg", "https://glasses.0744trip.com/static/images/师徒会2.jpg"]},
+    "张良布阵": {"type": "single", "urls": ["https://glasses.0744trip.com/static/images/张良布阵1.jpg", "https://glasses.0744trip.com/static/images/张良布阵2.jpg"]},
+    "张良挂印": {"type": "single", "urls": ["https://glasses.0744trip.com/static/images/张良挂印1.jpg", "https://glasses.0744trip.com/static/images/张良挂印2.jpg"]},
+    "弥勒宫": {"type": "single", "urls": ["https://glasses.0744trip.com/static/images/弥勒宫.jpg"]},
+    "情人峰": {"type": "single", "urls": ["https://glasses.0744trip.com/static/images/情人峰.jpg", "https://glasses.0744trip.com/static/images/情人峰1.jpg", "https://glasses.0744trip.com/static/images/情人峰2.jpg"]},
+    "拜师台": {"type": "single", "urls": ["https://glasses.0744trip.com/static/images/拜师台1.jpg", "https://glasses.0744trip.com/static/images/拜师台2.jpg"]},
+    "授书台": {"type": "single", "urls": ["https://glasses.0744trip.com/static/images/授书台.jpg"]},
+    "摘星台": {"type": "single", "urls": ["https://glasses.0744trip.com/static/images/摘星台1.jpg", "https://glasses.0744trip.com/static/images/摘星台2.jpg", "https://glasses.0744trip.com/static/images/摘星台3.jpg"]},
+    "松风听涛": {"type": "single", "urls": ["https://glasses.0744trip.com/static/images/松风听涛.jpg", "https://glasses.0744trip.com/static/images/松风听涛2.jpg"]},
+    "烽火台": {"type": "single", "urls": ["https://glasses.0744trip.com/static/images/烽火台.jpg"]},
+    "界上人家": {"type": "single", "urls": ["https://glasses.0744trip.com/static/images/界上人家.jpg", "https://glasses.0744trip.com/static/images/界上人家1.jpg", "https://glasses.0744trip.com/static/images/界上人家2.jpg"]},
+    "神象观阵": {"type": "single", "urls": ["https://glasses.0744trip.com/static/images/神象观阵.jpg", "https://glasses.0744trip.com/static/images/神象观阵1.jpg", "https://glasses.0744trip.com/static/images/神象观阵2.jpg"]},
+    "索道上站": {"type": "single", "urls": ["https://glasses.0744trip.com/static/images/索道上站.jpg"]},
+    "黄公悟道": {"type": "single", "urls": ["https://glasses.0744trip.com/static/images/黄公悟道.jpg"]},
+    "黄公掌": {"type": "single", "urls": ["https://glasses.0744trip.com/static/images/黄公掌1.jpg", "https://glasses.0744trip.com/static/images/黄公掌2.jpg"]},
+    "黄公演兵": {"type": "single", "urls": ["https://glasses.0744trip.com/static/images/黄公演兵.jpg", "https://glasses.0744trip.com/static/images/黄公演兵1.jpg", "https://glasses.0744trip.com/static/images/黄公演兵2.jpg"]},
+    "黄公秘卷": {"type": "single", "urls": ["https://glasses.0744trip.com/static/images/黄公秘卷1.jpg", "https://glasses.0744trip.com/static/images/黄公秘卷2.jpg"]},
+    "黄石寨标志牌（海拔）": {"type": "single", "urls": ["https://glasses.0744trip.com/static/images/黄石寨标志牌（海拔）.jpg", "https://glasses.0744trip.com/static/images/黄石寨标志牌（海拔）2.jpg"]},
+    "黄石松": {"type": "single", "urls": ["https://glasses.0744trip.com/static/images/黄石松1.jpg", "https://glasses.0744trip.com/static/images/黄石松2.jpg"]},
+    "雾海金龟": {"type": "composite", "urls": [["https://glasses.0744trip.com/static/images/雾海金龟.jpg", "雾海金龟"], ["https://glasses.0744trip.com/static/images/雾海金龟2.jpg", "雾海金龟"], ["https://glasses.0744trip.com/static/images/黄公布道1.jpg", "雾海金龟"], ["https://glasses.0744trip.com/static/images/黄公布道2.jpg", "雾海金龟"]]},
+    "黄公布道": {"type": "composite", "urls": [["https://glasses.0744trip.com/static/images/雾海金龟.jpg", "黄公布道"], ["https://glasses.0744trip.com/static/images/雾海金龟2.jpg", "黄公布道"], ["https://glasses.0744trip.com/static/images/黄公布道1.jpg", "黄公布道"], ["https://glasses.0744trip.com/static/images/黄公布道2.jpg", "黄公布道"]]},
+    "九重壁": {"type": "composite", "urls": [["https://glasses.0744trip.com/static/images/九重壁.jpg", "九重壁"], ["https://glasses.0744trip.com/static/images/九重壁2.jpg", "九重壁"], ["https://glasses.0744trip.com/static/images/回音壁1.jpg", "九重壁"], ["https://glasses.0744trip.com/static/images/回音壁2.jpg", "九重壁"], ["https://glasses.0744trip.com/static/images/御花园.jpg", "九重壁"], ["https://glasses.0744trip.com/static/images/御花园1.jpg", "九重壁"], ["https://glasses.0744trip.com/static/images/御花园2.jpg", "九重壁"], ["https://glasses.0744trip.com/static/images/御花园3.jpg", "九重壁"], ["https://glasses.0744trip.com/static/images/玉瓶峰1.jpg", "九重壁"], ["https://glasses.0744trip.com/static/images/玉瓶峰2.jpg", "九重壁"], ["https://glasses.0744trip.com/static/images/玉瓶峰3.jpg", "九重壁"]]},
+    "回音壁": {"type": "composite", "urls": [["https://glasses.0744trip.com/static/images/九重壁.jpg", "回音壁"], ["https://glasses.0744trip.com/static/images/九重壁2.jpg", "回音壁"], ["https://glasses.0744trip.com/static/images/回音壁1.jpg", "回音壁"], ["https://glasses.0744trip.com/static/images/回音壁2.jpg", "回音壁"], ["https://glasses.0744trip.com/static/images/御花园.jpg", "回音壁"], ["https://glasses.0744trip.com/static/images/御花园1.jpg", "回音壁"], ["https://glasses.0744trip.com/static/images/御花园2.jpg", "回音壁"], ["https://glasses.0744trip.com/static/images/御花园3.jpg", "回音壁"], ["https://glasses.0744trip.com/static/images/玉瓶峰1.jpg", "回音壁"], ["https://glasses.0744trip.com/static/images/玉瓶峰2.jpg", "回音壁"], ["https://glasses.0744trip.com/static/images/玉瓶峰3.jpg", "回音壁"]]},
+    "御花园": {"type": "composite", "urls": [["https://glasses.0744trip.com/static/images/九重壁.jpg", "御花园"], ["https://glasses.0744trip.com/static/images/九重壁2.jpg", "御花园"], ["https://glasses.0744trip.com/static/images/回音壁1.jpg", "御花园"], ["https://glasses.0744trip.com/static/images/回音壁2.jpg", "御花园"], ["https://glasses.0744trip.com/static/images/御花园.jpg", "御花园"], ["https://glasses.0744trip.com/static/images/御花园1.jpg", "御花园"], ["https://glasses.0744trip.com/static/images/御花园2.jpg", "御花园"], ["https://glasses.0744trip.com/static/images/御花园3.jpg", "御花园"], ["https://glasses.0744trip.com/static/images/玉瓶峰1.jpg", "御花园"], ["https://glasses.0744trip.com/static/images/玉瓶峰2.jpg", "御花园"], ["https://glasses.0744trip.com/static/images/玉瓶峰3.jpg", "御花园"]]},
+    "玉瓶峰": {"type": "composite", "urls": [["https://glasses.0744trip.com/static/images/九重壁.jpg", "玉瓶峰"], ["https://glasses.0744trip.com/static/images/九重壁2.jpg", "玉瓶峰"], ["https://glasses.0744trip.com/static/images/回音壁1.jpg", "玉瓶峰"], ["https://glasses.0744trip.com/static/images/回音壁2.jpg", "玉瓶峰"], ["https://glasses.0744trip.com/static/images/御花园.jpg", "玉瓶峰"], ["https://glasses.0744trip.com/static/images/御花园1.jpg", "玉瓶峰"], ["https://glasses.0744trip.com/static/images/御花园2.jpg", "玉瓶峰"], ["https://glasses.0744trip.com/static/images/御花园3.jpg", "玉瓶峰"], ["https://glasses.0744trip.com/static/images/玉瓶峰1.jpg", "玉瓶峰"], ["https://glasses.0744trip.com/static/images/玉瓶峰2.jpg", "玉瓶峰"], ["https://glasses.0744trip.com/static/images/玉瓶峰3.jpg", "玉瓶峰"]]},
+    "九重仙阁": {"type": "composite", "urls": [["https://glasses.0744trip.com/static/images/九重仙阁.jpg", "九重仙阁"], ["https://glasses.0744trip.com/static/images/九重仙阁1.jpg", "九重仙阁"], ["https://glasses.0744trip.com/static/images/九重仙阁2.jpg", "九重仙阁"], ["https://glasses.0744trip.com/static/images/九重仙阁3.jpg", "九重仙阁"], ["https://glasses.0744trip.com/static/images/太子峰1.jpg", "九重仙阁"], ["https://glasses.0744trip.com/static/images/太子峰2.jpg", "九重仙阁"], ["https://glasses.0744trip.com/static/images/太子峰3.jpg", "九重仙阁"], ["https://glasses.0744trip.com/static/images/神来峰.jpg", "九重仙阁"], ["https://glasses.0744trip.com/static/images/神来峰1.jpg", "九重仙阁"], ["https://glasses.0744trip.com/static/images/神来峰2.jpg", "九重仙阁"], ["https://glasses.0744trip.com/static/images/神来峰3.jpg", "九重仙阁"]]},
+    "太子峰": {"type": "composite", "urls": [["https://glasses.0744trip.com/static/images/九重仙阁.jpg", "太子峰"], ["https://glasses.0744trip.com/static/images/九重仙阁1.jpg", "太子峰"], ["https://glasses.0744trip.com/static/images/九重仙阁2.jpg", "太子峰"], ["https://glasses.0744trip.com/static/images/九重仙阁3.jpg", "太子峰"], ["https://glasses.0744trip.com/static/images/太子峰1.jpg", "太子峰"], ["https://glasses.0744trip.com/static/images/太子峰2.jpg", "太子峰"], ["https://glasses.0744trip.com/static/images/太子峰3.jpg", "太子峰"], ["https://glasses.0744trip.com/static/images/神来峰.jpg", "太子峰"], ["https://glasses.0744trip.com/static/images/神来峰1.jpg", "太子峰"], ["https://glasses.0744trip.com/static/images/神来峰2.jpg", "太子峰"], ["https://glasses.0744trip.com/static/images/神来峰3.jpg", "太子峰"]]},
+    "神来峰": {"type": "composite", "urls": [["https://glasses.0744trip.com/static/images/九重仙阁.jpg", "神来峰"], ["https://glasses.0744trip.com/static/images/九重仙阁1.jpg", "神来峰"], ["https://glasses.0744trip.com/static/images/九重仙阁2.jpg", "神来峰"], ["https://glasses.0744trip.com/static/images/九重仙阁3.jpg", "神来峰"], ["https://glasses.0744trip.com/static/images/太子峰1.jpg", "神来峰"], ["https://glasses.0744trip.com/static/images/太子峰2.jpg", "神来峰"], ["https://glasses.0744trip.com/static/images/太子峰3.jpg", "神来峰"], ["https://glasses.0744trip.com/static/images/神来峰.jpg", "神来峰"], ["https://glasses.0744trip.com/static/images/神来峰1.jpg", "神来峰"], ["https://glasses.0744trip.com/static/images/神来峰2.jpg", "神来峰"], ["https://glasses.0744trip.com/static/images/神来峰3.jpg", "神来峰"]]}
+  },
+  "古建筑": {
+    "六奇阁": {"type": "single", "urls": ["https://glasses.0744trip.com/static/images/六奇阁.jpg", "https://glasses.0744trip.com/static/images/六奇阁1.jpg", "https://glasses.0744trip.com/static/images/六奇阁2.jpg", "https://glasses.0744trip.com/static/images/六奇阁3.jpg"]}
+  }
+}
